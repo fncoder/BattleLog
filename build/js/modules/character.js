@@ -21,6 +21,10 @@ var Character = function () {
     this.criticDamage = 0;
     this.frozen = true;
     this.statusSkill = true;
+    this.poisonDamage = 0;
+    this.poison = true;
+    this.timePoisoning = 0;
+    this.poisonChance = 16;
   }
 
   _createClass(Character, [{
@@ -36,6 +40,27 @@ var Character = function () {
         this.health -= this.damage;
         this.maxDamage += this.damage;
         this.criticDamage = 0;
+      }
+    }
+  }, {
+    key: "poisonAttack",
+    value: function poisonAttack() {
+      this.damage = Math.floor(Math.random() * 10);
+      if (Math.floor(Math.random() * 100) <= this.poisonChance && this.poison) {
+        this.timePoisoning = 3;
+        this.poisonDamage = Math.floor(Math.random() * (30 - 10 + 1)) + 10;
+        this.health -= this.damage;
+        this.maxDamage += this.damage;
+        this.poison = false;
+      } else {
+        this.health -= this.damage;
+        this.maxDamage += this.damage;
+        this.timePoisoning -= 1;
+        if (this.timePoisoning === 0) {
+          this.timePoisoning = 0;
+          this.poisonDamage = 0;
+          this.poison = true;
+        }
       }
     }
   }, {

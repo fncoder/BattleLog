@@ -23,74 +23,64 @@ export class Dashboard {
     this.currentLog = 0
   }
 
-  attackProcess (player1, player2) {
+  attackProcess (player1, player2, playerSkill) {
     if (player1.health > 0 && player2.health > 0) {
-      player1.simpleAttack()
+      playerSkill()
 
       player2.health -= player1.damage
       player1.health += player1.damage
+
+      if (player1.timePoisoning > 0) {
+        player2.health -= player1.poisonDamage
+      } else {
+        player1.poisonDamage = 0
+        player1.poison = true
+      }
 
       this.damageInfo(player1)
 
       if (player2.health <= 0) {
         this.diedInfo(player2)
+        this.gameStatus = true
       }
     }
-
-    this.gameStatus = true
   }
 
   round (event) {
     let keyCode = event.keyCode
-    let timeRound = Math.floor(Math.random() * (3000 - 1000 + 1)) + 1000
 
-    if (!this.gameStatus && keyCode === 65 && player1.statusSkill) {
+    if (keyCode === 65 && player1.statusSkill) {
       if (player1.health > 0) {
-        this.attackProcess(player1, player2)
-      }
-
-      if (player2.health > 0) {
-        setTimeout(() => {
-          if (player2.potionHealth && Math.floor(Math.random() * 100) <= 25 && player2.health <= 50) {
-            player2.usePotionHealth()
-            this.potionInfo(player2)
-          } else if (player2.frozen && Math.floor(Math.random() * 100) <= 25 && player2.health <= 50) {
-            player2.useFrozen()
-            this.frozenInfo(player2)
-            player1.statusSkill = false
-            setTimeout(() => {
-              this.attackProcess(player2, player1)
-              this.updateHealth()
-              player1.statusSkill = true
-              this.gameStatus = false
-            }, timeRound)
-          } else {
-            this.attackProcess(player2, player1)
-            this.updateHealth()
-          }
-          this.gameStatus = false
-        }, timeRound)
+        player1.statusSkill = false
+        if (player1.timePoisoning > 0) {
+          player1.timePoisoning -= 1
+        }
+        this.attackProcess(player1, player2, player1.simpleAttack.bind(player1))
+        this.opponentSet()
       }
     }
 
-    if (!this.gameStatus && keyCode === 68 && player1.statusSkill) {
-      if (player1.potionHealth) {
+    if (keyCode === 68 && player1.statusSkill) {
+      if (player1.health > 0 && player1.potionHealth) {
+        player1.statusSkill = false
         player1.usePotionHealth()
         this.potionInfo(player1)
-        player1.statusSkill = false
-        setTimeout(() => {
-          this.attackProcess(player2, player1)
-          this.updateHealth()
-          player1.statusSkill = true
-          this.gameStatus = false
-        }, timeRound)
+        this.opponentSet()
       }
     }
 
-    if (!this.gameStatus && keyCode === 87 && player1.statusSkill) {
-      if (player1.frozen) {
+    if (keyCode === 87 && player1.statusSkill) {
+      if (player1.health > 0 && player1.frozen) {
         player1.useFrozen()
         this.frozenInfo(player1)
+      }
+    }
+
+    if (keyCode === 83 && player1.statusSkill) {
+      if (player1.health > 0) {
+        player1.statusSkill = false
+        this.attackProcess(player1, player2, player1.poisonAttack.bind(player1))
+        this.opponentSet()
       }
     }
 
@@ -107,6 +97,41 @@ export class Dashboard {
     this.chatScroll()
   }
 
+  opponentSet () {
+    let timeRound = Math.floor(Math.random() * (3000 - 1000 + 1)) + 1000
+
+    if (player2.health > 0) {
+      setTimeout(() => {
+        if (player2.potionHealth && Math.floor(Math.random() * 100) <= 25 && player2.health <= 50) {
+          player2.usePotionHealth()
+          this.potionInfo(player2)
+          player1.statusSkill = true
+        } else if (player2.frozen && Math.floor(Math.random() * 100) <= 25 && player2.health <= 75) {
+          player2.useFrozen()
+          this.frozenInfo(player2)
+          setTimeout(() => {
+            if (Math.floor(Math.random() * 100) <= 35 && player2.poison) {
+              this.attackProcess(player2, player1, player2.poisonAttack.bind(player2))
+            } else {
+              player2.timePoisoning -= 1
+              this.attackProcess(player2, player1, player2.simpleAttack.bind(player2))
+            }
+            this.updateHealth()
+            player1.statusSkill = true
+          }, timeRound)
+        } else {
+          if (Math.floor(Math.random() * 100) <= player2.poisonChance && player2.poison) {
+            this.attackProcess(player2, player1, player2.poisonAttack.bind(player2))
+          } else {
+            player2.timePoisoning -= 1
+            this.attackProcess(player2, player1, player2.simpleAttack.bind(player2))
+          }
+          this.updateHealth()
+          player1.statusSkill = true
+        }
+      }, timeRound)
+    }
+  }
   createLog () {
     this.singleLog = document.createElement('p')
 
@@ -122,16 +147,23 @@ export class Dashboard {
   }
 
   damageInfo (currentPlayer) {
-    if (currentPlayer.criticDamage > 0) {
+    if (currentPlayer.criticDamage > 0 && currentPlayer.poisonDamage === 0) {
       this.logs.push(currentPlayer.name + ': ' + 'critical damage ' + currentPlayer.damage)
       this.animateLog(currentPlayer)
-    } else if (currentPlayer.damage === 0) {
+    } else if (currentPlayer.damage === 0 && currentPlayer.poison) {
       this.logs.push(currentPlayer.name + ': ' + 'missed')
       this.animateLog(currentPlayer)
+    } else if (currentPlayer.poisonDamage > 0 && currentPlayer.damage === 0) {
+      this.logs.push(currentPlayer.name + ': ' + 'missed' + ' and damage ' + currentPlayer.poisonDamage + ' from poisoning')
     } else {
-      this.logs.push(currentPlayer.name + ': ' + 'damage ' + currentPlayer.damage)
+      if (currentPlayer.poisonDamage > 0 && currentPlayer.criticDamage > 0) {
+        this.logs.push(currentPlayer.name + ': ' + 'critical damage ' + currentPlayer.damage + ' and damage ' + currentPlayer.poisonDamage + ' from poisoning')
+      } else if (currentPlayer.poisonDamage > 0) {
+        this.logs.push(currentPlayer.name + ': ' + 'damage ' + currentPlayer.damage + ' and damage ' + currentPlayer.poisonDamage + ' from poisoning')
+      } else {
+        this.logs.push(currentPlayer.name + ': ' + 'damage ' + currentPlayer.damage)
+      }
     }
-
     this.createLog()
     this.updateLogs()
     this.chatScroll()
@@ -165,6 +197,7 @@ export class Dashboard {
     this.components.health.innerHTML = player1.health
     this.components.playerName.innerHTML = player1.name
   }
+
   updateLogs () {
     this.components.numbersLogs.innerHTML = this.currentLog + '/' + this.currentLog
   }

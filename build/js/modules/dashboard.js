@@ -42,22 +42,27 @@ var Dashboard = exports.Dashboard = function () {
 
   _createClass(Dashboard, [{
     key: 'attackProcess',
-    value: function attackProcess(player1, player2) {
+    value: function attackProcess(player1, player2, playerSkill) {
       if (player1.health > 0 && player2.health > 0) {
-
-        player1.simpleAttack();
+        playerSkill();
 
         player2.health -= player1.damage;
         player1.health += player1.damage;
+
+        if (player1.timePoisoning > 0) {
+          player2.health -= player1.poisonDamage;
+        } else {
+          player1.poisonDamage = 0;
+          player1.poison = true;
+        }
 
         this.damageInfo(player1);
 
         if (player2.health <= 0) {
           this.diedInfo(player2);
+          this.gameStatus = true;
         }
       }
-
-      this.gameStatus = true;
     }
   }, {
     key: 'round',
@@ -65,61 +70,44 @@ var Dashboard = exports.Dashboard = function () {
       var _this = this;
 
       var keyCode = event.keyCode;
-      var timeRound = Math.floor(Math.random() * (3000 - 1000 + 1)) + 1000;
 
-      if (!this.gameStatus && keyCode == 65 && player1.statusSkill) {
-
+      if (keyCode === 65 && player1.statusSkill) {
         if (player1.health > 0) {
-          this.attackProcess(player1, player2);
-        }
-
-        if (player2.health > 0) {
-          setTimeout(function () {
-            if (player2.potionHealth && Math.floor(Math.random() * 100) <= 25 && player2.health <= 50) {
-              player2.usePotionHealth();
-              _this.potionInfo(player2);
-            } else if (player2.frozen && Math.floor(Math.random() * 100) <= 25 && player2.health <= 50) {
-              player2.useFrozen();
-              _this.frozenInfo(player2);
-              player1.statusSkill = false;
-              setTimeout(function () {
-                _this.attackProcess(player2, player1);
-                _this.updateHealth();
-                player1.statusSkill = true;
-                _this.gameStatus = false;
-              }, timeRound);
-            } else {
-              _this.attackProcess(player2, player1);
-              _this.updateHealth();
-            }
-            _this.gameStatus = false;
-          }, timeRound);
+          player1.statusSkill = false;
+          if (player1.timePoisoning > 0) {
+            player1.timePoisoning -= 1;
+          }
+          this.attackProcess(player1, player2, player1.simpleAttack.bind(player1));
+          this.opponentSet();
         }
       }
 
-      if (!this.gameStatus && keyCode == 68 && player1.statusSkill) {
-        if (player1.potionHealth) {
+      if (keyCode === 68 && player1.statusSkill) {
+        if (player1.health > 0 && player1.potionHealth) {
+          player1.statusSkill = false;
           player1.usePotionHealth();
           this.potionInfo(player1);
-          player1.statusSkill = false;
-          setTimeout(function () {
-            _this.attackProcess(player2, player1);
-            _this.updateHealth();
-            player1.statusSkill = true;
-            _this.gameStatus = false;
-          }, timeRound);
+          this.opponentSet();
         }
       }
 
-      if (!this.gameStatus && keyCode == 87 && player1.statusSkill) {
-        if (player1.frozen) {
+      if (keyCode === 87 && player1.statusSkill) {
+        if (player1.health > 0 && player1.frozen) {
           player1.useFrozen();
           this.frozenInfo(player1);
         }
       }
 
+      if (keyCode === 83 && player1.statusSkill) {
+        if (player1.health > 0) {
+          player1.statusSkill = false;
+          this.attackProcess(player1, player2, player1.poisonAttack.bind(player1));
+          this.opponentSet();
+        }
+      }
+
       var _loop = function _loop(i) {
-        if (keyCode == parseInt(_this.components.elKeys[i].getAttribute('data-key'))) {
+        if (keyCode === parseInt(_this.components.elKeys[i].getAttribute('data-key'))) {
           _this.components.elKeys[i].classList.add('key-active');
           setTimeout(function () {
             _this.components.elKeys[i].classList.remove('key-active');
@@ -135,16 +123,55 @@ var Dashboard = exports.Dashboard = function () {
       this.chatScroll();
     }
   }, {
+    key: 'opponentSet',
+    value: function opponentSet() {
+      var _this2 = this;
+
+      var timeRound = Math.floor(Math.random() * (3000 - 1000 + 1)) + 1000;
+
+      if (player2.health > 0) {
+        setTimeout(function () {
+          if (player2.potionHealth && Math.floor(Math.random() * 100) <= 25 && player2.health <= 50) {
+            player2.usePotionHealth();
+            _this2.potionInfo(player2);
+            player1.statusSkill = true;
+          } else if (player2.frozen && Math.floor(Math.random() * 100) <= 25 && player2.health <= 75) {
+            player2.useFrozen();
+            _this2.frozenInfo(player2);
+            setTimeout(function () {
+              if (Math.floor(Math.random() * 100) <= 35 && player2.poison) {
+                _this2.attackProcess(player2, player1, player2.poisonAttack.bind(player2));
+              } else {
+                player2.timePoisoning -= 1;
+                _this2.attackProcess(player2, player1, player2.simpleAttack.bind(player2));
+              }
+              _this2.updateHealth();
+              player1.statusSkill = true;
+            }, timeRound);
+          } else {
+            if (Math.floor(Math.random() * 100) <= player2.poisonChance && player2.poison) {
+              _this2.attackProcess(player2, player1, player2.poisonAttack.bind(player2));
+            } else {
+              player2.timePoisoning -= 1;
+              _this2.attackProcess(player2, player1, player2.simpleAttack.bind(player2));
+            }
+            _this2.updateHealth();
+            player1.statusSkill = true;
+          }
+        }, timeRound);
+      }
+    }
+  }, {
     key: 'createLog',
     value: function createLog() {
-      var _this2 = this;
+      var _this3 = this;
 
       this.singleLog = document.createElement('p');
 
       this.singleLog.classList.add('log_' + this.currentLog);
 
       this.logs.forEach(function (value, index) {
-        _this2.singleLog.innerHTML = value;
+        _this3.singleLog.innerHTML = value;
       });
 
       this.currentLog++;
@@ -154,16 +181,23 @@ var Dashboard = exports.Dashboard = function () {
   }, {
     key: 'damageInfo',
     value: function damageInfo(currentPlayer) {
-      if (currentPlayer.criticDamage > 0) {
+      if (currentPlayer.criticDamage > 0 && currentPlayer.poisonDamage === 0) {
         this.logs.push(currentPlayer.name + ': ' + 'critical damage ' + currentPlayer.damage);
         this.animateLog(currentPlayer);
-      } else if (currentPlayer.damage == 0) {
+      } else if (currentPlayer.damage === 0 && currentPlayer.poison) {
         this.logs.push(currentPlayer.name + ': ' + 'missed');
         this.animateLog(currentPlayer);
+      } else if (currentPlayer.poisonDamage > 0 && currentPlayer.damage === 0) {
+        this.logs.push(currentPlayer.name + ': ' + 'missed' + ' and damage ' + currentPlayer.poisonDamage + ' from poisoning');
       } else {
-        this.logs.push(currentPlayer.name + ': ' + 'damage ' + currentPlayer.damage);
+        if (currentPlayer.poisonDamage > 0 && currentPlayer.criticDamage > 0) {
+          this.logs.push(currentPlayer.name + ': ' + 'critical damage ' + currentPlayer.damage + ' and damage ' + currentPlayer.poisonDamage + ' from poisoning');
+        } else if (currentPlayer.poisonDamage > 0) {
+          this.logs.push(currentPlayer.name + ': ' + 'damage ' + currentPlayer.damage + ' and damage ' + currentPlayer.poisonDamage + ' from poisoning');
+        } else {
+          this.logs.push(currentPlayer.name + ': ' + 'damage ' + currentPlayer.damage);
+        }
       }
-
       this.createLog();
       this.updateLogs();
       this.chatScroll();
@@ -209,7 +243,7 @@ var Dashboard = exports.Dashboard = function () {
   }, {
     key: 'animateLog',
     value: function animateLog(currentPlayer) {
-      var _this3 = this;
+      var _this4 = this;
 
       var lastElement = this.logs[this.logs.length - 1];
       var lengthName = currentPlayer.name.length + 2;
@@ -220,7 +254,7 @@ var Dashboard = exports.Dashboard = function () {
       this.components.animateLog.classList.add('active');
 
       setTimeout(function () {
-        _this3.components.animateLog.classList.remove('active');
+        _this4.components.animateLog.classList.remove('active');
       }, 2000);
     }
   }, {
