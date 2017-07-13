@@ -25,7 +25,7 @@ gulp.task('server', ()=>{
 
 
 gulp.task('sass', ()=>{
-  return gulp.src(['src/sass/global.scss'])
+  return gulp.src(['src/sass/battlelog.scss'])
   .pipe(concat('main.css'))
   .pipe(sass().on('error', sass.logError))
   .pipe(autoprefixer({
@@ -70,6 +70,11 @@ gulp.task('build-scripts', ()=>{
   .pipe(gulp.dest('build/js/modules'))
 });
 
+gulp.task('sounds', ()=>{
+  return gulp.src('src/sounds/*/**')
+  .pipe(gulp.dest('build/sounds'))
+});
+
 
 gulp.task('htmls', ()=>{
   return gulp.src('src/*.html')
@@ -77,9 +82,10 @@ gulp.task('htmls', ()=>{
 });
 
 
-gulp.task('watch', ['server','sass','css-build','js-build','htmls'], ()=>{
-  gulp.watch(['src/sass/global.scss', 'src/sass/base/**/*.scss', 'src/sass/components/**/*.scss', 'src/sass/helpers/**/*.scss', 'src/sass/layout/**/*.scss','src/sass/pages/**/*.scss', 'src/sass/vendors/**/*.scss'], ['sass']).on('change', reload);
+gulp.task('watch', ['server','sass','css-build','js-build','htmls','sounds'], ()=>{
+  gulp.watch('src/sass/battlelog.scss', ['sass']).on('change', reload);
   gulp.watch('src/stylesheets/*.css', ['css-build']).on('change', reload);
   gulp.watch('src/js/*/**.js', ['js-build', 'build-scripts']).on('change', reload);
+  gulp.watch('src/sounds/*/**', ['sounds']);
   gulp.watch('src/*.html', ['htmls']).on('change', reload);
 });

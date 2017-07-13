@@ -42,6 +42,7 @@ padding:25px;
   .player-name{
   font-size: 18px;
   width:50%;
+  
     &::before{
     content: '\f2c0';
     font-family: FontAwesome;
@@ -128,6 +129,22 @@ display: flex;
 flex-direction: column;
 justify-content: flex-end;
 
+  .btn-sound{
+  margin-right: 25px;
+  margin-top: 15px;
+  width:30px;
+  position: relative;
+  align-self: flex-end;
+  cursor: pointer;
+  color: #585858;
+  }
+  
+  .btn-sound::before{
+  content: '\f028';
+  font-family: FontAwesome;
+  font-size: 30px;
+  }
+
   .active-logs{
   position: relative;
   height:100%;
@@ -153,14 +170,10 @@ justify-content: flex-end;
     display: flex;
     flex-direction: row;
     justify-content: space-between;
-
-      .name-chat{
-      padding:10px 0;
-      }
-
+    padding-bottom: 8px;
+    
       .numbers-logs{
       margin-right: 20px;
-      padding:10px 0;
       }
     }
 
@@ -189,4 +202,19 @@ transform: scale(1.1);
 opacity:1 !important;
 visibility: visible !important;
 transform: scale(1.3) !important;
+}
+
+.off{}
+
+
+.off::after{
+content: '';
+position: absolute;
+top: 50%;
+left: 50%;
+width: 40px;
+height: 2px;
+background: #585858;
+transform: translate(-50%, -50%) rotate(133deg);
+color: #585858;
 }

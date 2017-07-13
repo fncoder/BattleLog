@@ -8,7 +8,7 @@ export default class Character {
     this.potionHealth = true
     this.criticDamage = 0
     this.frozen = true
-    this.statusSkill = true
+    this.statusSkill = false
     this.poisonDamage = 0
     this.poison = true
     this.timePoisoning = 0

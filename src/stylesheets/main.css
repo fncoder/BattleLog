@@ -107,6 +107,19 @@ p {
   flex-direction: column;
   -ms-flex-pack: end;
   justify-content: flex-end; }
+  .messages .btn-sound {
+    margin-right: 25px;
+    margin-top: 15px;
+    width: 30px;
+    position: relative;
+    -ms-flex-item-align: end;
+    align-self: flex-end;
+    cursor: pointer;
+    color: #585858; }
+  .messages .btn-sound::before {
+    content: '\f028';
+    font-family: FontAwesome;
+    font-size: 30px; }
   .messages .active-logs {
     position: relative;
     height: 100%;
@@ -129,12 +142,10 @@ p {
     -ms-flex-direction: row;
     flex-direction: row;
     -ms-flex-pack: justify;
-    justify-content: space-between; }
-    .messages .chat-log .chat-info .name-chat {
-      padding: 10px 0; }
+    justify-content: space-between;
+    padding-bottom: 8px; }
     .messages .chat-log .chat-info .numbers-logs {
-      margin-right: 20px;
-      padding: 10px 0; }
+      margin-right: 20px; }
   .messages .chat-log .logs {
     border: 1px solid #585858;
     overflow-x: hidden;
@@ -151,3 +162,14 @@ p {
   opacity: 1 !important;
   visibility: visible !important;
   transform: scale(1.3) !important; }
+
+.off::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 40px;
+  height: 2px;
+  background: #585858;
+  transform: translate(-50%, -50%) rotate(133deg);
+  color: #585858; }

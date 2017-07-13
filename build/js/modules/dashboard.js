@@ -3,7 +3,7 @@
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.Dashboard = undefined;
+exports.player2 = exports.player1 = undefined;
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
@@ -11,21 +11,37 @@ var _character = require('./character.js');
 
 var _character2 = _interopRequireDefault(_character);
 
+var _sound = require('./sound.js');
+
+var _sound2 = _interopRequireDefault(_sound);
+
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
-var Dashboard = exports.Dashboard = function () {
+function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
+
+function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+
+var player1 = exports.player1 = new _character2.default('You');
+var player2 = exports.player2 = new _character2.default('Opponent');
+
+var Dashboard = function (_Sound) {
+  _inherits(Dashboard, _Sound);
+
   function Dashboard() {
     _classCallCheck(this, Dashboard);
 
-    this.components = {
+    var _this = _possibleConstructorReturn(this, (Dashboard.__proto__ || Object.getPrototypeOf(Dashboard)).call(this));
+
+    _this.components = {
       keysItem: {
         w: 87,
         a: 65,
         s: 83,
         d: 68
       },
+
       playerName: document.querySelector('.player-name'),
       health: document.querySelector('.health'),
       wrapLog: document.querySelector('.logs'),
@@ -34,10 +50,12 @@ var Dashboard = exports.Dashboard = function () {
       messages: document.querySelector('.messages'),
       animateLog: document.querySelector('.log-animate'),
       numbersLogs: document.querySelector('.numbers-logs')
+
     };
-    this.gameStatus = false;
-    this.logs = [];
-    this.currentLog = 0;
+    _this.gameStatus = false;
+    _this.logs = [];
+    _this.currentLog = 0;
+    return _this;
   }
 
   _createClass(Dashboard, [{
@@ -59,58 +77,55 @@ var Dashboard = exports.Dashboard = function () {
         this.damageInfo(player1);
 
         if (player2.health <= 0) {
-          this.diedInfo(player2);
-          this.gameStatus = true;
+          this.logInfo(player2, 'died');
         }
       }
     }
   }, {
     key: 'round',
-    value: function round(event) {
-      var _this = this;
+    value: function round(e) {
+      var _this2 = this;
 
-      var keyCode = event.keyCode;
+      var keyCode = e.keyCode;
 
-      if (keyCode === 65 && player1.statusSkill) {
+      if (keyCode === 65 && !player1.statusSkill) {
         if (player1.health > 0) {
-          player1.statusSkill = false;
+          player1.statusSkill = true;
           if (player1.timePoisoning > 0) {
             player1.timePoisoning -= 1;
           }
           this.attackProcess(player1, player2, player1.simpleAttack.bind(player1));
-          this.opponentSet();
+          this.opponentSet(keyCode);
+          this.initSound(keyCode);
         }
-      }
-
-      if (keyCode === 68 && player1.statusSkill) {
+      } else if (keyCode === 68 && !player1.statusSkill) {
         if (player1.health > 0 && player1.potionHealth) {
-          player1.statusSkill = false;
+          player1.statusSkill = true;
           player1.usePotionHealth();
-          this.potionInfo(player1);
-          this.opponentSet();
+          this.logInfo(player1, 'use potion health');
+          this.opponentSet(keyCode);
+          this.initSound(keyCode);
         }
-      }
-
-      if (keyCode === 87 && player1.statusSkill) {
+      } else if (keyCode === 87 && !player1.statusSkill) {
         if (player1.health > 0 && player1.frozen) {
           player1.useFrozen();
-          this.frozenInfo(player1);
+          this.logInfo(player1, 'your opponent is frozen');
+          this.initSound(keyCode);
         }
-      }
-
-      if (keyCode === 83 && player1.statusSkill) {
+      } else if (keyCode === 83 && !player1.statusSkill) {
         if (player1.health > 0) {
-          player1.statusSkill = false;
+          player1.statusSkill = true;
           this.attackProcess(player1, player2, player1.poisonAttack.bind(player1));
           this.opponentSet();
+          this.initSound(keyCode);
         }
       }
 
       var _loop = function _loop(i) {
-        if (keyCode === parseInt(_this.components.elKeys[i].getAttribute('data-key'))) {
-          _this.components.elKeys[i].classList.add('key-active');
+        if (keyCode === parseInt(_this2.components.elKeys[i].getAttribute('data-key'))) {
+          _this2.components.elKeys[i].classList.add('key-active');
           setTimeout(function () {
-            _this.components.elKeys[i].classList.remove('key-active');
+            _this2.components.elKeys[i].classList.remove('key-active');
           }, 300);
         }
       };
@@ -120,12 +135,11 @@ var Dashboard = exports.Dashboard = function () {
       }
 
       this.updateHealth();
-      this.chatScroll();
     }
   }, {
     key: 'opponentSet',
-    value: function opponentSet() {
-      var _this2 = this;
+    value: function opponentSet(evKey) {
+      var _this3 = this;
 
       var timeRound = Math.floor(Math.random() * (3000 - 1000 + 1)) + 1000;
 
@@ -133,30 +147,36 @@ var Dashboard = exports.Dashboard = function () {
         setTimeout(function () {
           if (player2.potionHealth && Math.floor(Math.random() * 100) <= 25 && player2.health <= 50) {
             player2.usePotionHealth();
-            _this2.potionInfo(player2);
-            player1.statusSkill = true;
+            _this3.logInfo(player2, 'use potion health');
+            _this3.initSound(_this3.components.keysItem.d);
+            player1.statusSkill = false;
           } else if (player2.frozen && Math.floor(Math.random() * 100) <= 25 && player2.health <= 75) {
             player2.useFrozen();
-            _this2.frozenInfo(player2);
+            _this3.initSound(_this3.components.keysItem.w);
+            _this3.logInfo(player2, 'your opponent is frozen');
             setTimeout(function () {
               if (Math.floor(Math.random() * 100) <= 35 && player2.poison) {
-                _this2.attackProcess(player2, player1, player2.poisonAttack.bind(player2));
+                _this3.attackProcess(player2, player1, player2.poisonAttack.bind(player2));
+                _this3.initSound(_this3.components.keysItem.s);
               } else {
                 player2.timePoisoning -= 1;
-                _this2.attackProcess(player2, player1, player2.simpleAttack.bind(player2));
+                _this3.attackProcess(player2, player1, player2.simpleAttack.bind(player2));
+                _this3.initSound(_this3.components.keysItem.a);
               }
-              _this2.updateHealth();
-              player1.statusSkill = true;
+              _this3.updateHealth();
+              player1.statusSkill = false;
             }, timeRound);
           } else {
             if (Math.floor(Math.random() * 100) <= player2.poisonChance && player2.poison) {
-              _this2.attackProcess(player2, player1, player2.poisonAttack.bind(player2));
+              _this3.attackProcess(player2, player1, player2.poisonAttack.bind(player2));
+              _this3.initSound(_this3.components.keysItem.s);
             } else {
               player2.timePoisoning -= 1;
-              _this2.attackProcess(player2, player1, player2.simpleAttack.bind(player2));
+              _this3.attackProcess(player2, player1, player2.simpleAttack.bind(player2));
+              _this3.initSound(_this3.components.keysItem.a);
             }
-            _this2.updateHealth();
-            player1.statusSkill = true;
+            _this3.updateHealth();
+            player1.statusSkill = false;
           }
         }, timeRound);
       }
@@ -164,19 +184,38 @@ var Dashboard = exports.Dashboard = function () {
   }, {
     key: 'createLog',
     value: function createLog() {
-      var _this3 = this;
+      var _this4 = this;
 
       this.singleLog = document.createElement('p');
 
       this.singleLog.classList.add('log_' + this.currentLog);
 
       this.logs.forEach(function (value, index) {
-        _this3.singleLog.innerHTML = value;
+        _this4.singleLog.innerHTML = value;
       });
 
       this.currentLog++;
 
       this.components.wrapLog.appendChild(this.singleLog);
+
+      this.components.wrapLog.scrollTop = this.components.wrapLog.scrollHeight;
+    }
+  }, {
+    key: 'animateLog',
+    value: function animateLog(currentPlayer) {
+      var _this5 = this;
+
+      var lastElement = this.logs[this.logs.length - 1];
+      var lengthName = currentPlayer.name.length + 2;
+
+      var elementLog = lastElement.slice(lengthName, lastElement.length);
+
+      this.components.animateLog.innerHTML = elementLog;
+      this.components.animateLog.classList.add('active');
+
+      setTimeout(function () {
+        _this5.components.animateLog.classList.remove('active');
+      }, 2000);
     }
   }, {
     key: 'damageInfo',
@@ -200,34 +239,14 @@ var Dashboard = exports.Dashboard = function () {
       }
       this.createLog();
       this.updateLogs();
-      this.chatScroll();
     }
   }, {
-    key: 'potionInfo',
-    value: function potionInfo(currentPlayer) {
-      this.logs.push(currentPlayer.name + ': ' + 'use potion health');
+    key: 'logInfo',
+    value: function logInfo(currentPlayer, infoSkill) {
+      this.logs.push(currentPlayer.name + ': ' + infoSkill);
       this.createLog();
       this.animateLog(currentPlayer);
       this.updateLogs();
-      this.chatScroll();
-    }
-  }, {
-    key: 'frozenInfo',
-    value: function frozenInfo(currentPlayer) {
-      this.logs.push(currentPlayer.name + ': ' + 'your opponent is frozen');
-      this.createLog();
-      this.animateLog(currentPlayer);
-      this.updateLogs();
-      this.chatScroll();
-    }
-  }, {
-    key: 'diedInfo',
-    value: function diedInfo(currentPlayer) {
-      this.logs.push(currentPlayer.name + ': ' + 'died');
-      this.animateLog(currentPlayer);
-      this.createLog();
-      this.updateLogs();
-      this.chatScroll();
     }
   }, {
     key: 'updateHealth',
@@ -241,41 +260,18 @@ var Dashboard = exports.Dashboard = function () {
       this.components.numbersLogs.innerHTML = this.currentLog + '/' + this.currentLog;
     }
   }, {
-    key: 'animateLog',
-    value: function animateLog(currentPlayer) {
-      var _this4 = this;
-
-      var lastElement = this.logs[this.logs.length - 1];
-      var lengthName = currentPlayer.name.length + 2;
-
-      var elementLog = lastElement.slice(lengthName, lastElement.length);
-
-      this.components.animateLog.innerHTML = elementLog;
-      this.components.animateLog.classList.add('active');
-
-      setTimeout(function () {
-        _this4.components.animateLog.classList.remove('active');
-      }, 2000);
-    }
-  }, {
-    key: 'chatScroll',
-    value: function chatScroll() {
-      this.components.wrapLog.scrollTop = this.components.wrapLog.scrollHeight;
-    }
-  }, {
     key: 'init',
     value: function init() {
       if (!this.gameStatus) {
         document.addEventListener('keydown', this.round.bind(this), false);
       }
-
+      this.status();
       this.updateHealth();
       this.updateLogs();
     }
   }]);
 
   return Dashboard;
-}();
+}(_sound2.default);
 
-var player1 = new _character2.default('You');
-var player2 = new _character2.default('Opponent');
+exports.default = Dashboard;

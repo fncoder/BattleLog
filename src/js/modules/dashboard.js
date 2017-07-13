@@ -1,7 +1,12 @@
 import Character from './character.js'
+import Sound from './sound.js'
 
-export class Dashboard {
+export let player1 = new Character('You')
+export let player2 = new Character('Opponent')
+
+export default class Dashboard extends Sound {
   constructor () {
+    super()
     this.components = {
       keysItem: {
         w: 87,
@@ -9,6 +14,7 @@ export class Dashboard {
         s: 83,
         d: 68
       },
+
       playerName: document.querySelector('.player-name'),
       health: document.querySelector('.health'),
       wrapLog: document.querySelector('.logs'),
@@ -17,6 +23,7 @@ export class Dashboard {
       messages: document.querySelector('.messages'),
       animateLog: document.querySelector('.log-animate'),
       numbersLogs: document.querySelector('.numbers-logs')
+
     }
     this.gameStatus = false
     this.logs = []
@@ -40,47 +47,44 @@ export class Dashboard {
       this.damageInfo(player1)
 
       if (player2.health <= 0) {
-        this.diedInfo(player2)
-        this.gameStatus = true
+        this.logInfo(player2, 'died')
       }
     }
   }
 
-  round (event) {
-    let keyCode = event.keyCode
+  round (e) {
+    let keyCode = e.keyCode
 
-    if (keyCode === 65 && player1.statusSkill) {
+    if (keyCode === 65 && !player1.statusSkill) {
       if (player1.health > 0) {
-        player1.statusSkill = false
+        player1.statusSkill = true
         if (player1.timePoisoning > 0) {
           player1.timePoisoning -= 1
         }
         this.attackProcess(player1, player2, player1.simpleAttack.bind(player1))
-        this.opponentSet()
+        this.opponentSet(keyCode)
+        this.initSound(keyCode)
       }
-    }
-
-    if (keyCode === 68 && player1.statusSkill) {
+    } else if (keyCode === 68 && !player1.statusSkill) {
       if (player1.health > 0 && player1.potionHealth) {
-        player1.statusSkill = false
+        player1.statusSkill = true
         player1.usePotionHealth()
-        this.potionInfo(player1)
-        this.opponentSet()
+        this.logInfo(player1, 'use potion health')
+        this.opponentSet(keyCode)
+        this.initSound(keyCode)
       }
-    }
-
-    if (keyCode === 87 && player1.statusSkill) {
+    } else if (keyCode === 87 && !player1.statusSkill) {
       if (player1.health > 0 && player1.frozen) {
         player1.useFrozen()
-        this.frozenInfo(player1)
+        this.logInfo(player1, 'your opponent is frozen')
+        this.initSound(keyCode)
       }
-    }
-
-    if (keyCode === 83 && player1.statusSkill) {
+    } else if (keyCode === 83 && !player1.statusSkill) {
       if (player1.health > 0) {
-        player1.statusSkill = false
+        player1.statusSkill = true
         this.attackProcess(player1, player2, player1.poisonAttack.bind(player1))
         this.opponentSet()
+        this.initSound(keyCode)
       }
     }
 
@@ -94,40 +98,45 @@ export class Dashboard {
     }
 
     this.updateHealth()
-    this.chatScroll()
   }
 
-  opponentSet () {
+  opponentSet (evKey) {
     let timeRound = Math.floor(Math.random() * (3000 - 1000 + 1)) + 1000
 
     if (player2.health > 0) {
       setTimeout(() => {
         if (player2.potionHealth && Math.floor(Math.random() * 100) <= 25 && player2.health <= 50) {
           player2.usePotionHealth()
-          this.potionInfo(player2)
-          player1.statusSkill = true
+          this.logInfo(player2, 'use potion health')
+          this.initSound(this.components.keysItem.d)
+          player1.statusSkill = false
         } else if (player2.frozen && Math.floor(Math.random() * 100) <= 25 && player2.health <= 75) {
           player2.useFrozen()
-          this.frozenInfo(player2)
+          this.initSound(this.components.keysItem.w)
+          this.logInfo(player2, 'your opponent is frozen')
           setTimeout(() => {
             if (Math.floor(Math.random() * 100) <= 35 && player2.poison) {
               this.attackProcess(player2, player1, player2.poisonAttack.bind(player2))
+              this.initSound(this.components.keysItem.s)
             } else {
               player2.timePoisoning -= 1
               this.attackProcess(player2, player1, player2.simpleAttack.bind(player2))
+              this.initSound(this.components.keysItem.a)
             }
             this.updateHealth()
-            player1.statusSkill = true
+            player1.statusSkill = false
           }, timeRound)
         } else {
           if (Math.floor(Math.random() * 100) <= player2.poisonChance && player2.poison) {
             this.attackProcess(player2, player1, player2.poisonAttack.bind(player2))
+            this.initSound(this.components.keysItem.s)
           } else {
             player2.timePoisoning -= 1
             this.attackProcess(player2, player1, player2.simpleAttack.bind(player2))
+            this.initSound(this.components.keysItem.a)
           }
           this.updateHealth()
-          player1.statusSkill = true
+          player1.statusSkill = false
         }
       }, timeRound)
     }
@@ -144,6 +153,22 @@ export class Dashboard {
     this.currentLog++
 
     this.components.wrapLog.appendChild(this.singleLog)
+
+    this.components.wrapLog.scrollTop = this.components.wrapLog.scrollHeight
+  }
+
+  animateLog (currentPlayer) {
+    let lastElement = this.logs[this.logs.length - 1]
+    let lengthName = currentPlayer.name.length + 2
+
+    let elementLog = lastElement.slice(lengthName, lastElement.length)
+
+    this.components.animateLog.innerHTML = elementLog
+    this.components.animateLog.classList.add('active')
+
+    setTimeout(() => {
+      this.components.animateLog.classList.remove('active')
+    }, 2000)
   }
 
   damageInfo (currentPlayer) {
@@ -166,31 +191,13 @@ export class Dashboard {
     }
     this.createLog()
     this.updateLogs()
-    this.chatScroll()
   }
 
-  potionInfo (currentPlayer) {
-    this.logs.push(currentPlayer.name + ': ' + 'use potion health')
+  logInfo (currentPlayer, infoSkill) {
+    this.logs.push(currentPlayer.name + ': ' + infoSkill)
     this.createLog()
     this.animateLog(currentPlayer)
     this.updateLogs()
-    this.chatScroll()
-  }
-
-  frozenInfo (currentPlayer) {
-    this.logs.push(currentPlayer.name + ': ' + 'your opponent is frozen')
-    this.createLog()
-    this.animateLog(currentPlayer)
-    this.updateLogs()
-    this.chatScroll()
-  }
-
-  diedInfo (currentPlayer) {
-    this.logs.push(currentPlayer.name + ': ' + 'died')
-    this.animateLog(currentPlayer)
-    this.createLog()
-    this.updateLogs()
-    this.chatScroll()
   }
 
   updateHealth () {
@@ -202,33 +209,12 @@ export class Dashboard {
     this.components.numbersLogs.innerHTML = this.currentLog + '/' + this.currentLog
   }
 
-  animateLog (currentPlayer) {
-    let lastElement = this.logs[this.logs.length - 1]
-    let lengthName = currentPlayer.name.length + 2
-
-    let elementLog = lastElement.slice(lengthName, lastElement.length)
-
-    this.components.animateLog.innerHTML = elementLog
-    this.components.animateLog.classList.add('active')
-
-    setTimeout(() => {
-      this.components.animateLog.classList.remove('active')
-    }, 2000)
-  }
-
-  chatScroll () {
-    this.components.wrapLog.scrollTop = this.components.wrapLog.scrollHeight
-  }
-
   init () {
     if (!this.gameStatus) {
       document.addEventListener('keydown', this.round.bind(this), false)
     }
-
+    this.status()
     this.updateHealth()
     this.updateLogs()
   }
 }
-
-const player1 = new Character('You')
-const player2 = new Character('Opponent')
