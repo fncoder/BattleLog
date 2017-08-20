@@ -372,10 +372,17 @@ var _dashboard2 = _interopRequireDefault(_dashboard);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-var dash = new _dashboard2.default();
+var theme = document.querySelector('.theme');
+var menu = document.querySelector('.theme-options__start');
 
-dash.init();
-//# sourceMappingURL=data:application/json;charset=utf-8;base64,eyJ2ZXJzaW9uIjozLCJzb3VyY2VzIjpbImZha2VfZjEwMDIzMS5qcyJdLCJuYW1lcyI6WyJkYXNoIiwiaW5pdCJdLCJtYXBwaW5ncyI6Ijs7QUFBQTs7Ozs7O0FBRUEsSUFBSUEsT0FBTyx5QkFBWDs7QUFFQUEsS0FBS0MsSUFBTCIsImZpbGUiOiJmYWtlX2YxMDAyMzEuanMiLCJzb3VyY2VzQ29udGVudCI6WyJpbXBvcnQgRGFzaGJvYXJkIGZyb20gJy4vZGFzaGJvYXJkLmpzJ1xyXG5cclxubGV0IGRhc2ggPSBuZXcgRGFzaGJvYXJkKClcclxuXHJcbmRhc2guaW5pdCgpXHJcbiJdfQ==
+menu.addEventListener('click', function () {
+  theme.style.visibility = 'hidden';
+  theme.style.opacity = '0';
+
+  var dash = new _dashboard2.default();
+  dash.init();
+});
+//# sourceMappingURL=data:application/json;charset=utf-8;base64,eyJ2ZXJzaW9uIjozLCJzb3VyY2VzIjpbImZha2VfZjk3MDFiMTguanMiXSwibmFtZXMiOlsidGhlbWUiLCJkb2N1bWVudCIsInF1ZXJ5U2VsZWN0b3IiLCJtZW51IiwiYWRkRXZlbnRMaXN0ZW5lciIsInN0eWxlIiwidmlzaWJpbGl0eSIsIm9wYWNpdHkiLCJkYXNoIiwiaW5pdCJdLCJtYXBwaW5ncyI6Ijs7QUFBQTs7Ozs7O0FBRUEsSUFBTUEsUUFBUUMsU0FBU0MsYUFBVCxDQUF1QixRQUF2QixDQUFkO0FBQ0EsSUFBTUMsT0FBT0YsU0FBU0MsYUFBVCxDQUF1Qix1QkFBdkIsQ0FBYjs7QUFFQUMsS0FBS0MsZ0JBQUwsQ0FBc0IsT0FBdEIsRUFBK0IsWUFBSTtBQUNqQ0osUUFBTUssS0FBTixDQUFZQyxVQUFaLEdBQXlCLFFBQXpCO0FBQ0FOLFFBQU1LLEtBQU4sQ0FBWUUsT0FBWixHQUFzQixHQUF0Qjs7QUFFQSxNQUFJQyxPQUFPLHlCQUFYO0FBQ0FBLE9BQUtDLElBQUw7QUFDRCxDQU5EIiwiZmlsZSI6ImZha2VfZjk3MDFiMTguanMiLCJzb3VyY2VzQ29udGVudCI6WyJpbXBvcnQgRGFzaGJvYXJkIGZyb20gJy4vZGFzaGJvYXJkLmpzJ1xyXG5cclxuY29uc3QgdGhlbWUgPSBkb2N1bWVudC5xdWVyeVNlbGVjdG9yKCcudGhlbWUnKTtcclxuY29uc3QgbWVudSA9IGRvY3VtZW50LnF1ZXJ5U2VsZWN0b3IoJy50aGVtZS1vcHRpb25zX19zdGFydCcpO1xyXG5cclxubWVudS5hZGRFdmVudExpc3RlbmVyKCdjbGljaycsICgpPT57XHJcbiAgdGhlbWUuc3R5bGUudmlzaWJpbGl0eSA9ICdoaWRkZW4nO1xyXG4gIHRoZW1lLnN0eWxlLm9wYWNpdHkgPSAnMCc7XHJcblxyXG4gIGxldCBkYXNoID0gbmV3IERhc2hib2FyZCgpO1xyXG4gIGRhc2guaW5pdCgpXHJcbn0pXHJcbiJdfQ==
 },{"./dashboard.js":2}],4:[function(require,module,exports){
 'use strict';
 

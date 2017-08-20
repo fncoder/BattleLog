@@ -1,5 +1,12 @@
 import Dashboard from './dashboard.js'
 
-let dash = new Dashboard()
+const theme = document.querySelector('.theme');
+const menu = document.querySelector('.theme-options__start');
 
-dash.init()
+menu.addEventListener('click', ()=>{
+  theme.style.visibility = 'hidden';
+  theme.style.opacity = '0';
+
+  let dash = new Dashboard();
+  dash.init()
+})
